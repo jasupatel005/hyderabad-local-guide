@@ -6,9 +6,7 @@ from typing import Any, Dict, List
 
 PRODUCT_MD = Path(__file__).resolve().parent.parent / '.kiro' / 'product.md'
 
-YAML_BLOCK_RE = re.compile(r"```yaml
-(.*?)
-```", re.DOTALL)
+YAML_BLOCK_RE = re.compile(r"```yaml\s*(.*?)\s*```", re.DOTALL)
 
 class LocalContext:
     def __init__(self, raw_md: str, parts: Dict[str, Any]):
