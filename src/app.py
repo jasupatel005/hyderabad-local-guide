@@ -34,15 +34,33 @@ if tool == 'Slang Translator':
         st.success(' '.join(out_words))
         st.info('Translations are context-driven from `product.md`. Update the slang list there to steer outputs.')
 
+
 elif tool == 'Traffic Estimator':
     st.subheader('🚦 Traffic Estimator')
-    col1, col2 = st.columns(2)
-    with col1:
-        area = st.selectbox('Area', ['Hitec City','Madhapur','Gachibowli','Financial District','Kondapur','Jubilee Hills','Charminar','Mehdipatnam','Nampally','Mallepally','Uppal','Nacharam','Necklace Road','LB Nagar','Ameerpet','Dilsukhnagar'])
-    with col2:
-        when = st.datetime_input('Date & time', dt.datetime.now())
+    col1, col2, col3 = st.columns([1, 1, 1])
 
-    def estimate(area: str, when: dt.datetime) -> str:
+    with col1:
+        area = st.selectbox(
+            'Area',
+            [
+                'Hitec City','Madhapur','Gachibowli','Financial District','Kondapur',
+                'Jubilee Hills','Charminar','Mehdipatnam','Nampally','Mallepally',
+                'Uppal','Nacharam','Necklace Road','LB Nagar','Ameerpet','Dilsukhnagar'
+            ]
+        )
+
+    # Streamlit doesn't have datetime_input; use date_input + time_input
+    default_dt = dt.datetime.now()
+    with col2:
+        date_sel = st.date_input('Date', default_dt.date())
+
+    with col3:
+        time_sel = st.time_input('Time', default_dt.time())
+
+    # Compose a single datetime from date + time
+    when = dt.datetime.combine(date_sel, time_sel)
+
+    def estimate(area: str, when: dt.datetime):
         dow = when.strftime('%a')
         hm = when.strftime('%H:%M')
         sev = 'low'
@@ -59,23 +77,25 @@ elif tool == 'Traffic Estimator':
         # Event overrides
         for ev in traffic.get('event_overrides', []):
             if area in ev.get('locations', []):
-                sev = max(sev, ev.get('severity','medium'), key=lambda x: ['low','medium','high'].index(x))
+                sev = max(sev, ev.get('severity', 'medium'),
+                          key=lambda x: ['low', 'medium', 'high'].index(x))
                 notes.append(f"Event: {ev.get('match')} active")
         # Road notes
         for rn in traffic.get('road_notes', []):
-            if area.lower() in rn.get('road','').lower() or area in rn.get('notes',''):
+            if area.lower() in rn.get('road', '').lower():
                 notes.append(rn.get('notes'))
         return sev, notes
 
     if st.button('Estimate Traffic'):
         sev, notes = estimate(area, when)
-        badge = {'low':'🟢 Low','medium':'🟡 Medium','high':'🔴 High'}
+        badge = {'low': '🟢 Low', 'medium': '🟡 Medium', 'high': '🔴 High'}
         st.write(f"**Severity**: {badge.get(sev, sev)}")
         if notes:
             st.write('**Notes:**')
             for n in notes:
                 st.write(f"- {n}")
         st.info('Rules sourced from `product.md`. Modify YAML blocks to steer behavior.')
+
 
 else:
     st.subheader('🍲 Local Tips')
@@ -94,5 +114,14 @@ else:
         st.write(f"- {s}")
     st.divider()
     st.write('**Safety**')
-    st.json(safety)
+    
+    st.write('**Emergency Numbers**')
+    emergency = safety.get('emergency_numbers', {})
+    for k, v in emergency.items():
+        st.write(f"- **{k.capitalize()}**: {v}")
+
+    st.write('**Safety Notes**')
+    for note in safety.get('notes', []):
+        st.write(f"- {note}")
+
     st.caption('Edit `/.kiro/product.md` to refine tips, add places, or update safety info.')
