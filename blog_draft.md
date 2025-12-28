@@ -32,7 +32,7 @@ slang:
 - **Local Tips** → screenshot
 
 ## Evidence (Visuals)
-Include 3–5 screenshots or a short GIF of the app performing translations and estimations.
+Screenshots are added in Assets folder.
 
 ## How to Run
 ```bash
